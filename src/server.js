@@ -18,31 +18,43 @@ server.post("/", upload.single('file'), async (req, res) => {
     try {
         let nome = req.file.originalname
         let content = req.file.buffer
-        let envia = await client.files.write(`/${nome}`, content, { create: true })
+        await client.files.write(`/${nome}`, content, { create: true })
+        let info = []
+        for await (const file of client.files.ls(`/${nome}`)) {
+            info.push(file)
+        }
+        console.log(info);
         res.status(200).json({ message: "Arquivo enviado" })
     } catch (error) {
-        console.log(error);
+        console.log("erro no upload", error);
         res.status(500).json({ message: "Erro" })
     }
 })
 
-// const testPeer = async () => {
-//     let p = await client.swarm.connect("/ip4/100.64.10.137/tcp/26007/p2p/12D3KooWKKFY7hTvYt36XEenh3ZdLuBrfC1qa8goHVKCUXpngNtz")
-//     console.log(p);
-// } 
-// testPeer()
+// Pina os arquivos
+for await (const f of client.files.ls("/") ) {
+    let pin = await client.pin.add(f.cid)
+    console.log(pin);
+}
 
-// const readFilesIPNS = async () => {
-//     const pinned = client.name.resolve("/ipns/k51qzi5uqu5djp7ox80a7fqob39awabb3h7ryh3ub861vfwa6erd56hcsvs1kz")
+const testPeer = async () => {
+    let p = await client.swarm.connect("/ip4/100.64.10.137/tcp/26007/p2p/12D3KooWKKFY7hTvYt36XEenh3ZdLuBrfC1qa8goHVKCUXpngNtz")
+    console.log(p);
+} 
+testPeer()
 
-//     for await(const p of pinned) {
-//         let buffer = client.cat(p.split("/")[2])
-//         for await (const chunk of buffer) {
-//             console.log(chunk.toString());
-//         }
-//     }
-// } 
-// readFilesIPNS()
+const readFilesIPNS = async () => {
+    // const pinned = client.name.resolve("/ipns/k51qzi5uqu5dmd2mgtfpapx4p4f2i37461kqod6bzujv4pbly2gtdr8h2cdex8")
+    let buffer = client.ls("/ipns/k51qzi5uqu5dmd2mgtfpapx4p4f2i37461kqod6bzujv4pbly2gtdr8h2cdex8")
+
+    for await(const p of buffer) {
+        // let buffer = client.cat(p.split("/")[2])
+        for await (const chunk of client.cat(p.cid)) {
+            console.log(chunk.toString());
+        }
+    }
+} 
+readFilesIPNS()
 
 server.listen(5002, () => {
     console.log("Servidor ligado")
