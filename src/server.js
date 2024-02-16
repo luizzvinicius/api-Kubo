@@ -1,60 +1,58 @@
 import express from 'express'
-import { create } from 'kubo-rpc-client'
 import multer from 'multer'
+import axios from 'axios'
+import FormData from 'form-data'
 
 const server = express()
 const upload = multer()
-const client = create("http://127.0.0.1:5001")
 
-server.get("/", async (req, res) => {
-    let info = []
-    for await (const file of client.files.ls("/")) {
-        info.push(file)
-    }
-    res.send(info)
-})
-
-server.post("/", upload.single('file'), async (req, res) => {
+server.post("/", async (req, res) => {
     try {
-        let nome = req.file.originalname
-        let content = req.file.buffer
-        await client.files.write(`/${nome}`, content, { create: true })
-        let info = []
-        for await (const file of client.files.ls(`/${nome}`)) {
-            info.push(file)
-        }
-        console.log(info);
-        res.status(200).json({ message: "Arquivo enviado" })
+        const filesfromIPFS = await axios.post("http://127.0.0.1:5001/api/v0/files/ls?arg=/&long=true")
+        res.json(filesfromIPFS.data)
     } catch (error) {
-        console.log("erro no upload", error);
-        res.status(500).json({ message: "Erro" })
+        res.json({message: error})
     }
 })
 
-// Pina os arquivos
-for await (const f of client.files.ls("/") ) {
-    let pin = await client.pin.add(f.cid)
-    console.log(pin);
-}
-
-const testPeer = async () => {
-    let p = await client.swarm.connect("/ip4/100.64.10.137/tcp/26007/p2p/12D3KooWKKFY7hTvYt36XEenh3ZdLuBrfC1qa8goHVKCUXpngNtz")
-    console.log(p);
-} 
-testPeer()
-
-const readFilesIPNS = async () => {
-    // const pinned = client.name.resolve("/ipns/k51qzi5uqu5dmd2mgtfpapx4p4f2i37461kqod6bzujv4pbly2gtdr8h2cdex8")
-    let buffer = client.ls("/ipns/k51qzi5uqu5dmd2mgtfpapx4p4f2i37461kqod6bzujv4pbly2gtdr8h2cdex8")
-
-    for await(const p of buffer) {
-        // let buffer = client.cat(p.split("/")[2])
-        for await (const chunk of client.cat(p.cid)) {
-            console.log(chunk.toString());
-        }
+server.post("/upload", upload.single('file'), async (req, res) => {
+    try {
+        const nome = req.file.originalname
+        const content = req.file.buffer
+        const formData = new FormData()
+        formData.append(nome, content)
+        await axios.post(`http://127.0.0.1:5001/api/v0/files/write?arg=/${nome}&create=true`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+        const filesfromIPFS = await axios.post("http://127.0.0.1:5001/api/v0/files/ls?arg=/&long=true")
+        res.status(200).json({ message: "Arquivo enviado", dados: filesfromIPFS.data })
+    } catch (error) {
+        res.status(500).json({ message: error })
     }
-} 
-readFilesIPNS()
+})
+
+// // Pina os arquivos
+// for await (const f of client.files.ls("/") ) {
+//     let pin = await client.pin.add(f.cid)
+//     console.log(pin);
+// }
+
+// const testPeer = async () => {
+//     let p = await client.swarm.connect("/ip4/100.64.10.137/tcp/26007/p2p/12D3KooWKKFY7hTvYt36XEenh3ZdLuBrfC1qa8goHVKCUXpngNtz")
+//     console.log(p);
+// } 
+// testPeer()
+
+// const readFilesIPNS = async () => {
+//     // const pinned = client.name.resolve("/ipns/k51qzi5uqu5dmd2mgtfpapx4p4f2i37461kqod6bzujv4pbly2gtdr8h2cdex8")
+//     let buffer = client.ls("/ipns/k51qzi5uqu5dmd2mgtfpapx4p4f2i37461kqod6bzujv4pbly2gtdr8h2cdex8")
+
+//     for await(const p of buffer) {
+//         // let buffer = client.cat(p.split("/")[2])
+//         for await (const chunk of client.cat(p.cid)) {
+//             console.log(chunk.toString());
+//         }
+//     }
+// } 
+// readFilesIPNS()
 
 server.listen(5002, () => {
     console.log("Servidor ligado")
