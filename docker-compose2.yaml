@@ -4,10 +4,10 @@ services:
     image: ipfs/kubo:release
     volumes:
       - ./compose/ipfs2:/data/ipfs
-    ports:
-     - "4002:4001" # ipfs swarm
-     - "5002:5001" # ipfs api
-     - "8081:8080" # ipfs gateway
+    # ports:
+    #  - "4002:4001" # ipfs swarm
+    #  - "5002:5001" # ipfs api
+    #  - "8081:8080" # ipfs gateway
     networks:
       - personalizada
       - personalizada2
@@ -25,10 +25,10 @@ services:
       # CLUSTER_MONITORPINGINTERVAL: 2s # Speed up peer discovery
     volumes:
       - ./compose/cluster2:/data/ipfs-cluster
-    ports:
-        - "9097:9094" # Open API port (allows ipfs-cluster-ctl usage on host)
-        - "9098:9095" # Cluster IPFS Proxy endpoint
-        - "9099:9096" # Cluster swarm endpoint
+    # ports:
+        # - "9097:9094" # Open API port (allows ipfs-cluster-ctl usage on host)
+        # - "9098:9095" # Cluster IPFS Proxy endpoint
+        # - "9099:9096" # Cluster swarm endpoint
     networks:
       - personalizada
       - personalizada2
