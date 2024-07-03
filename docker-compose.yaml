@@ -44,9 +44,10 @@ services:
         # - "9094:9094" # Open API port (allows ipfs-cluster-ctl usage on host)
         # - "9095:9095" # Cluster IPFS Proxy endpoint
         # - "9096:9096" # Cluster swarm endpoint
-        - "9090:9094" # Open API port (allows ipfs-cluster-ctl usage on host)
+        - "9094:9094" # Open API port (allows ipfs-cluster-ctl usage on host)
         - "9091:9095" # Cluster IPFS Proxy endpoint
         - "9092:9096" # Cluster swarm endpoint
+        - "9093:9097" # Cluster swarm endpoint
     volumes:
       - ./compose/cluster0:/data/ipfs-cluster
     networks:
